@@ -1,0 +1,246 @@
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  transition: width 200ms ease, min-width 200ms ease;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar--collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+
+/* Logo */
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0 0.875rem;
+  height: 56px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.sidebar__logo-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar__logo-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar__logo-text {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.sidebar__collapse-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color 150ms ease, background 150ms ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.sidebar__collapse-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.sidebar__collapse-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Section */
+.sidebar__section {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem 0;
+}
+
+.sidebar__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.875rem;
+  margin-bottom: 0.125rem;
+}
+
+.sidebar__section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.sidebar__add-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.sidebar__add-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.sidebar__add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sidebar__add-btn--standalone {
+  margin: 0.375rem auto;
+  display: flex;
+}
+
+/* Connection items */
+.sidebar__connections {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 0.5rem;
+}
+
+.sidebar__conn-skeleton {
+  height: 32px;
+  margin: 0 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar__conn-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  transition: background 150ms ease, color 150ms ease;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sidebar__conn-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.sidebar__conn-item--active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.sidebar__conn-item--active:hover {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.sidebar__conn-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__conn-tables {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar__empty {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Bottom navigation */
+.sidebar__bottom {
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.sidebar__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  transition: background 150ms ease, color 150ms ease;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar__nav-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.sidebar__nav-item--active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.sidebar__nav-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar__nav-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+    min-width: 60px;
+  }
+}

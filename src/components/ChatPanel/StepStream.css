@@ -1,0 +1,132 @@
+.step-stream {
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin-top: 0.5rem;
+}
+
+.step-stream__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-stream__item {
+  display: flex;
+  gap: 0.625rem;
+  animation: slideInLeft 200ms ease;
+  position: relative;
+}
+
+.step-stream__icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.step-stream__icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 200ms, border-color 200ms, color 200ms;
+}
+
+.step-stream__icon svg {
+  width: 11px;
+  height: 11px;
+}
+
+.step-stream__item--active .step-stream__icon {
+  background: var(--accent-muted);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.step-stream__item--done .step-stream__icon {
+  background: var(--green-muted);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.step-stream__item--error .step-stream__icon {
+  background: var(--red-muted);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.step-stream__icon--spinning svg {
+  animation: spin 0.7s linear infinite;
+}
+
+.step-stream__connector {
+  width: 1px;
+  flex: 1;
+  min-height: 8px;
+  background: var(--border-subtle);
+  margin: 2px 0;
+}
+
+.step-stream__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-bottom: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.step-stream__type {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.step-stream__item--active .step-stream__type {
+  color: var(--accent);
+}
+
+.step-stream__item--done .step-stream__type {
+  color: var(--green);
+}
+
+.step-stream__item--error .step-stream__type {
+  color: var(--red);
+}
+
+.step-stream__message {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.step-stream__sql {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 0.375rem;
+  line-height: 1.5;
+  overflow: hidden;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.step-stream__spinner {
+  animation: spin 0.7s linear infinite;
+}

@@ -1,0 +1,5 @@
+{"level":"info","timestamp":"2026-03-29T18:22:46.222+0530","msg":"Astra CLI: Connecting in directory","dir":"/Users/abhishekkumar/Documents/projects/llm_apps/data_engineer/frontend_data_engineer"}
+{"level":"info","timestamp":"2026-03-29T18:22:46.541+0530","msg":"Created new Astra CLI user","username":"/Users/abhishekkumar/Documents/projects/llm_apps/data_engineer/frontend_data_engineer"}
+{"level":"info","timestamp":"2026-03-29T18:22:46.543+0530","msg":"📘 Loaded Agent Config","path":"/Users/abhishekkumar/Documents/projects/llm_apps/astra_go/astra/agents/configs/agents/astra.yaml"}
+{"level":"info","timestamp":"2026-03-29T18:22:46.544+0530","msg":"BaseAgent initialized","user_id":23,"agent_name":"astra"}
+{"level":"info","timestamp":"2026-03-29T18:22:46.545+0530","msg":"Astra agent initialized in CLI","dir":"/Users/abhishekkumar/Documents/projects/llm_apps/data_engineer/frontend_data_engineer","userID":23,"sessionID":"cli-b9de5edd-87a8-457b-beb2-040bdeb7b4ae"}
