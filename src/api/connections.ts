@@ -210,6 +210,7 @@ export async function testConnection(id: string): Promise<{ success: boolean; me
 }
 
 export async function testConnectionData(data: ConnectionFormData): Promise<{ success: boolean; message: string; table_count?: number }> {
+  console.log("testConnectionData ", IS_MOCK)
   if (IS_MOCK) {
     await randomDelay(1000, 2000)
     if (!data.host || !data.database) {
