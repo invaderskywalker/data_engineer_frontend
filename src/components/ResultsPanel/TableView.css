@@ -1,0 +1,111 @@
+.table-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.table-view__scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.table-view__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table-view__th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.table-view__th--num {
+  text-align: right;
+}
+
+.table-view__th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  transition: background 150ms;
+}
+
+.table-view__th:hover .table-view__th-content {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.table-view__th--num .table-view__th-content {
+  flex-direction: row-reverse;
+}
+
+.table-view__sort-icon {
+  font-size: 0.7rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.table-view__sort-placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.table-view__tr--even {
+  background: transparent;
+}
+
+.table-view__tr--odd {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.table-view__tr--even:hover,
+.table-view__tr--odd:hover {
+  background: var(--bg-hover);
+}
+
+.table-view__td {
+  padding: 0.5rem 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-view__td--num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.table-view__td--null {
+  color: var(--text-muted);
+}
+
+.table-view__footer {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.table-view__footer strong {
+  color: var(--text-secondary);
+}
