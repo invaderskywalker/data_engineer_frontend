@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { ConnectionFormData, SchemaSnapshot } from '../../types'
+import type { ConnectionFormData } from '../../types'
 import { testConnectionData, createConnection } from '../../api/connections'
 import Button from '../common/Button'
 import './ConnectionWizard.css'
 
-type WizardStep = 1 | 2 | 3 | 4
+type WizardStep = 1 | 2
 
 function parseConnectionString(cs: string): Partial<ConnectionFormData> {
   try {
@@ -25,13 +25,6 @@ function parseConnectionString(cs: string): Partial<ConnectionFormData> {
   }
 }
 
-const SCHEMA_STEPS = [
-  'Discovering tables and columns',
-  'Detecting foreign key relationships',
-  'Generating semantic descriptions',
-  'Building query context',
-  'Indexing for natural language search',
-]
 
 export default function ConnectionWizard() {
   const navigate = useNavigate()
@@ -49,9 +42,8 @@ export default function ConnectionWizard() {
   })
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; table_count?: number } | null>(null)
   const [testing, setTesting] = useState(false)
-  const [schemaProgress, setSchemaProgress] = useState(0)
-  const [schema, setSchema] = useState<SchemaSnapshot | null>(null)
-  const [createdConnectionId, setCreatedConnectionId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
   function updateForm(field: keyof ConnectionFormData, value: string | number | boolean) {
@@ -90,48 +82,22 @@ export default function ConnectionWizard() {
     }
   }
 
-  async function handleContinueFromTest() {
-    setStep(3)
-    // Simulate schema introspection progress
-    for (let i = 1; i <= SCHEMA_STEPS.length; i++) {
-      await new Promise(r => setTimeout(r, 600 + Math.random() * 400))
-      setSchemaProgress(i)
-    }
-    // Create the connection
+  async function handleSaveAndContinue() {
+    setSaving(true)
+    setSaveError(null)
     try {
       const data = inputMode === 'string'
         ? { ...parseConnectionString(connectionString), name: form.name || 'My Database' } as ConnectionFormData
         : form
       const conn = await createConnection(data)
-      setCreatedConnectionId(conn.id)
-      // Mock schema
-      setSchema({
-        tables: Array.from({ length: testResult?.table_count ?? 12 }, (_, i) => ({
-          name: `table_${i + 1}`,
-          columns: [],
-          row_count_estimate: Math.floor(Math.random() * 100000),
-          description: '',
-        })),
-        relationships: Array.from({ length: Math.floor((testResult?.table_count ?? 12) * 0.7) }, (_, i) => ({
-          from: `table_${i + 1}.id`,
-          to: `table_${i + 2}.ref_id`,
-          type: 'many-to-one',
-        })),
-        suggested_questions: [
-          'What is the total revenue this month?',
-          'Show me the top 10 customers by value',
-          'How many new users signed up this week?',
-          'What are the most popular products?',
-          'Show trends over the last 6 months',
-        ],
-      })
-    } catch {
-      // continue anyway in mock mode
+      navigate(`/chat/${conn.id}`)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save connection')
+      setSaving(false)
     }
-    setStep(4)
   }
 
-  const totalSteps = 4
+  const totalSteps = 2
   const progress = ((step - 1) / (totalSteps - 1)) * 100
 
   return (
@@ -160,7 +126,7 @@ export default function ConnectionWizard() {
 
         {/* Step indicators */}
         <div className="wizard__steps">
-          {(['Details', 'Test', 'Schema', 'Ready'] as const).map((label, i) => (
+          {(['Details', 'Test'] as const).map((label, i) => (
             <div
               key={label}
               className={`wizard__step-indicator ${step > i + 1 ? 'wizard__step-indicator--done' : step === i + 1 ? 'wizard__step-indicator--active' : ''}`}
@@ -390,113 +356,17 @@ export default function ConnectionWizard() {
                   Back
                 </Button>
                 {testResult?.success && (
-                  <Button variant="primary" size="md" onClick={handleContinueFromTest}>
-                    Continue
-                  </Button>
+                  <>
+                    {saveError && <div className="wizard__error">{saveError}</div>}
+                    <Button variant="primary" size="md" loading={saving} onClick={handleSaveAndContinue}>
+                      Save & Open
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
           )}
 
-          {/* Step 3: Schema Introspection */}
-          {step === 3 && (
-            <div className="wizard__step-content" key="step3">
-              <h2 className="wizard__step-title">Reading Your Schema</h2>
-              <p className="wizard__step-desc">
-                Analyzing your database structure to enable natural language queries.
-              </p>
-
-              <div className="wizard__schema-steps">
-                {SCHEMA_STEPS.map((label, i) => {
-                  const done = schemaProgress > i
-                  const active = schemaProgress === i
-                  return (
-                    <div
-                      key={label}
-                      className={`wizard__schema-step ${done ? 'wizard__schema-step--done' : active ? 'wizard__schema-step--active' : 'wizard__schema-step--pending'}`}
-                    >
-                      <div className="wizard__schema-step-icon">
-                        {done ? (
-                          <svg viewBox="0 0 16 16" fill="none">
-                            <polyline points="3,8 6,11 13,4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                          </svg>
-                        ) : active ? (
-                          <svg className="wizard__schema-spinner" viewBox="0 0 16 16" fill="none">
-                            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeDasharray="20" strokeDashoffset="5" />
-                          </svg>
-                        ) : (
-                          <span>{i + 1}</span>
-                        )}
-                      </div>
-                      <span className="wizard__schema-step-label">{label}</span>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="wizard__schema-progress">
-                <div
-                  className="wizard__schema-progress-fill"
-                  style={{ width: `${(schemaProgress / SCHEMA_STEPS.length) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Ready */}
-          {step === 4 && (
-            <div className="wizard__step-content wizard__step-content--ready" key="step4">
-              <div className="wizard__ready-icon">
-                <svg viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="22" fill="var(--green-muted)" stroke="var(--green)" strokeWidth="2" />
-                  <polyline points="14,24 20,30 34,16" stroke="var(--green)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h2 className="wizard__step-title">Your Database is Ready!</h2>
-              <p className="wizard__step-desc">
-                Connected to <strong>{form.database || 'your database'}</strong> with{' '}
-                <strong>{schema?.tables.length ?? 0} tables</strong> and{' '}
-                <strong>{schema?.relationships.length ?? 0} relationships</strong> detected.
-              </p>
-
-              {schema && schema.suggested_questions.length > 0 && (
-                <div className="wizard__suggestions">
-                  <p className="wizard__suggestions-label">Try asking:</p>
-                  <div className="wizard__suggestion-chips">
-                    {schema.suggested_questions.slice(0, 5).map(q => (
-                      <button
-                        key={q}
-                        className="wizard__suggestion-chip"
-                        onClick={() => {
-                          if (createdConnectionId) {
-                            navigate(`/chat/${createdConnectionId}`, { state: { initialQuestion: q } })
-                          }
-                        }}
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="wizard__actions wizard__actions--centered">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => {
-                    if (createdConnectionId) {
-                      navigate(`/chat/${createdConnectionId}`)
-                    } else {
-                      navigate('/connections')
-                    }
-                  }}
-                >
-                  Start Asking Questions
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

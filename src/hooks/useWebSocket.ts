@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { AgentStep } from '../types'
-import { IS_MOCK } from '../api/client'
+import { IS_MOCK, delay } from '../api/client'
+import { getSocket } from '../lib/socket'
 
 const MOCK_STEPS: AgentStep[] = [
   {
@@ -42,7 +43,8 @@ export function useWebSocket(runId: string | null): UseWebSocketResult {
   const [isConnected, setIsConnected] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const mockTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const socketRef = useRef<{ disconnect: () => void } | null>(null)
+  // Holds the per-event-listener teardown for the current runId subscription
+  const unsubRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     if (!runId) {
@@ -52,35 +54,36 @@ export function useWebSocket(runId: string | null): UseWebSocketResult {
       return
     }
 
-    // Clear any existing state
+    // Clear any existing state / subscriptions from the previous runId
     setSteps([])
     setIsComplete(false)
+    if (unsubRef.current) {
+      unsubRef.current()
+      unsubRef.current = null
+    }
 
     if (IS_MOCK) {
-      // Simulate streaming steps with delays
       setIsConnected(true)
-      let delay = 400
+      let d = 400
 
       mockTimersRef.current.forEach(t => clearTimeout(t))
       mockTimersRef.current = []
 
       MOCK_STEPS.forEach((step, index) => {
         const timer = setTimeout(() => {
-          const stepWithTimestamp: AgentStep = {
-            ...step,
-            timestamp: new Date().toISOString(),
-          }
-          setSteps(prev => [...prev, stepWithTimestamp])
-
+          setSteps(prev => [...prev, { ...step, timestamp: new Date().toISOString() }])
           if (index === MOCK_STEPS.length - 1) {
             setIsComplete(true)
             setIsConnected(false)
           }
-        }, delay)
+        }, d)
 
         mockTimersRef.current.push(timer)
-        delay += Math.floor(Math.random() * 600) + 500
+        d += Math.floor(Math.random() * 600) + 500
       })
+
+      // suppress unused-import warning for delay
+      void delay
 
       return () => {
         mockTimersRef.current.forEach(t => clearTimeout(t))
@@ -88,43 +91,39 @@ export function useWebSocket(runId: string | null): UseWebSocketResult {
       }
     }
 
-    // Real socket.io connection
-    const connectSocket = async () => {
-      const { io } = await import('socket.io-client')
-      const socket = io('http://localhost:5000', {
-        query: { run_id: runId },
-        transports: ['websocket'],
-      })
+    // Use the shared singleton so we don't open a second WebSocket connection
+    const socket = getSocket()
 
-      socketRef.current = socket
+    setIsConnected(socket.connected)
 
-      socket.on('connect', () => {
-        setIsConnected(true)
-      })
+    const onConnect = () => setIsConnected(true)
+    const onDisconnect = () => setIsConnected(false)
 
-      socket.on('disconnect', () => {
-        setIsConnected(false)
-      })
-
-      socket.on('agent_step', (step: AgentStep) => {
-        setSteps(prev => [...prev, step])
-        if (step.type === 'done' || step.type === 'error') {
-          setIsComplete(true)
-          socket.disconnect()
+    const onAgentStep = (step: AgentStep) => {
+      setSteps(prev => [...prev, step])
+      if (step.type === 'done' || step.type === 'error') {
+        setIsComplete(true)
+        if (unsubRef.current) {
+          unsubRef.current()
+          unsubRef.current = null
         }
-      })
-
-      socket.on('error', () => {
-        setIsConnected(false)
-      })
+      }
     }
 
-    connectSocket()
+    socket.on('connect', onConnect)
+    socket.on('disconnect', onDisconnect)
+    socket.on('agent_step', onAgentStep)
+
+    unsubRef.current = () => {
+      socket.off('connect', onConnect)
+      socket.off('disconnect', onDisconnect)
+      socket.off('agent_step', onAgentStep)
+    }
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect()
-        socketRef.current = null
+      if (unsubRef.current) {
+        unsubRef.current()
+        unsubRef.current = null
       }
     }
   }, [runId])

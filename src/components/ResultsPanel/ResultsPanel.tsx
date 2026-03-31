@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Run, SchemaTable } from '../../types'
+import type { Run } from '../../types'
 import TableView from './TableView'
 import ChartView from './ChartView'
 import SQLView from './SQLView'
@@ -10,7 +10,6 @@ type Tab = 'table' | 'chart' | 'sql'
 interface ResultsPanelProps {
   run: Run | null
   isLoading?: boolean
-  schema?: SchemaTable[]
 }
 
 function formatMs(ms: number): string {
@@ -26,41 +25,8 @@ function getTotalMs(run: Run): number {
   return run.queries_executed.reduce((sum, q) => sum + q.execution_time_ms, 0)
 }
 
-function SchemaOverview({ tables }: { tables: SchemaTable[] }) {
-  return (
-    <div className="results-panel__schema">
-      <h3 className="results-panel__schema-title">Schema Overview</h3>
-      <div className="results-panel__schema-list">
-        {tables.map(table => (
-          <div key={table.name} className="results-panel__schema-item">
-            <div className="results-panel__schema-item-header">
-              <span className="results-panel__schema-table-name">{table.name}</span>
-              <span className="results-panel__schema-row-count">
-                {table.row_count_estimate.toLocaleString()} rows
-              </span>
-            </div>
-            <p className="results-panel__schema-desc">{table.description}</p>
-            <div className="results-panel__schema-cols">
-              {table.columns.slice(0, 5).map(col => (
-                <span key={col.name} className={`results-panel__schema-col ${col.is_pk ? 'results-panel__schema-col--pk' : ''}`}>
-                  {col.name}
-                  <span className="results-panel__schema-col-type">{col.type}</span>
-                </span>
-              ))}
-              {table.columns.length > 5 && (
-                <span className="results-panel__schema-col results-panel__schema-col--more">
-                  +{table.columns.length - 5} more
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
-export default function ResultsPanel({ run, isLoading, schema }: ResultsPanelProps) {
+export default function ResultsPanel({ run, isLoading }: ResultsPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>('table')
   const [sqlCopied, setSqlCopied] = useState(false)
 
@@ -91,28 +57,24 @@ export default function ResultsPanel({ run, isLoading, schema }: ResultsPanelPro
     }
   }
 
-  // Empty state: no run, show schema overview
+  // Empty state
   if (!run && !isLoading) {
     return (
       <div className="results-panel results-panel--empty">
-        {schema && schema.length > 0 ? (
-          <SchemaOverview tables={schema} />
-        ) : (
-          <div className="results-panel__placeholder">
-            <div className="results-panel__placeholder-icon">
-              <svg viewBox="0 0 64 64" fill="none">
-                <rect x="8" y="16" width="48" height="36" rx="4" stroke="var(--border-default)" strokeWidth="2" />
-                <line x1="8" y1="26" x2="56" y2="26" stroke="var(--border-default)" strokeWidth="2" />
-                <line x1="24" y1="16" x2="24" y2="52" stroke="var(--border-default)" strokeWidth="2" />
-                <circle cx="48" cy="44" r="10" fill="var(--bg-elevated)" stroke="var(--border-default)" strokeWidth="2" />
-                <line x1="48" y1="40" x2="48" y2="48" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" />
-                <line x1="44" y1="44" x2="52" y2="44" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <h3>Results will appear here</h3>
-            <p>Ask a question to see tables, charts, and SQL queries</p>
+        <div className="results-panel__placeholder">
+          <div className="results-panel__placeholder-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="8" y="16" width="48" height="36" rx="4" stroke="var(--border-default)" strokeWidth="2" />
+              <line x1="8" y1="26" x2="56" y2="26" stroke="var(--border-default)" strokeWidth="2" />
+              <line x1="24" y1="16" x2="24" y2="52" stroke="var(--border-default)" strokeWidth="2" />
+              <circle cx="48" cy="44" r="10" fill="var(--bg-elevated)" stroke="var(--border-default)" strokeWidth="2" />
+              <line x1="48" y1="40" x2="48" y2="48" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" />
+              <line x1="44" y1="44" x2="52" y2="44" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </div>
-        )}
+          <h3>Results will appear here</h3>
+          <p>Ask a question to see tables, charts, and SQL queries</p>
+        </div>
       </div>
     )
   }

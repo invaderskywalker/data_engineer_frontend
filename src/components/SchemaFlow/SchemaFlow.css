@@ -1,0 +1,433 @@
+/* ── Container ─────────────────────────────────────────── */
+.sflow {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.sflow__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0.75rem;
+  height: 38px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.sflow__db-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sflow__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.sflow__meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 2px;
+}
+
+.sflow__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sflow__collapse-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.sflow__collapse-btn:hover {
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* ── Tabs ──────────────────────────────────────────────── */
+.sflow__tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+}
+
+.sflow__tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 0.625rem;
+  height: 32px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.sflow__tab svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.sflow__tab:hover {
+  color: var(--text-secondary);
+}
+
+.sflow__tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Canvas (diagram + placeholder) ───────────────────── */
+.sflow__canvas {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.sflow__canvas .react-flow {
+  background: var(--bg-primary);
+}
+
+.sflow__canvas .react-flow__controls {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sflow__canvas .react-flow__controls-button {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  fill: var(--text-secondary);
+}
+
+.sflow__canvas .react-flow__controls-button:hover {
+  background: var(--bg-elevated);
+}
+
+.sflow__canvas .react-flow__controls-button svg {
+  fill: var(--text-secondary);
+}
+
+.sflow__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.75rem;
+  color: var(--text-muted);
+}
+
+.sflow__placeholder svg {
+  width: 28px;
+  height: 28px;
+  opacity: 0.3;
+}
+
+.sflow__placeholder span {
+  font-size: 0.78rem;
+}
+
+/* ── Table Node ────────────────────────────────────────── */
+.sflow-node {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  font-family: inherit;
+  width: 220px;
+  font-size: 0.72rem;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sflow-node:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 10px rgba(91, 94, 244, 0.12);
+}
+
+.sflow-node__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sflow-node__icon {
+  width: 11px;
+  height: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sflow-node__table-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+}
+
+.sflow-node__row-count {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.sflow-node__cols {
+  padding: 3px 0 4px;
+}
+
+.sflow-node__col {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+}
+
+.sflow-node__col:hover {
+  background: var(--bg-elevated);
+}
+
+.sflow-node__col--more {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.65rem;
+  padding-top: 3px;
+}
+
+.sflow-node__badge {
+  font-size: 0.52rem;
+  font-weight: 700;
+  width: 16px;
+  min-width: 16px;
+  text-align: center;
+  border-radius: 3px;
+  padding: 1px 2px;
+}
+
+.sflow-node__badge--pk {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.sflow-node__badge--fk {
+  background: rgba(91, 94, 244, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(91, 94, 244, 0.2);
+}
+
+.sflow-node__badge--empty {
+  visibility: hidden;
+}
+
+.sflow-node__col-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 0.68rem;
+}
+
+.sflow-node__col-type {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.sflow-node__empty-cols {
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.67rem;
+}
+
+.sflow-node__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--accent) !important;
+  border: 2px solid var(--bg-surface) !important;
+}
+
+/* ── Overview tab ──────────────────────────────────────── */
+.sflow-overview {
+  overflow-y: auto;
+  height: 100%;
+  padding: 6px 0;
+}
+
+.sflow-overview__table {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sflow-overview__table:last-child {
+  border-bottom: none;
+}
+
+.sflow-overview__table-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.sflow-overview__table-row:hover {
+  background: var(--bg-elevated);
+}
+
+.sflow-overview__chevron {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.sflow-overview__chevron--open {
+  transform: rotate(0deg);
+}
+
+.sflow-overview__chevron:not(.sflow-overview__chevron--open) {
+  transform: rotate(-90deg);
+}
+
+.sflow-overview__table-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.sflow-overview__table-name {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sflow-overview__count {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sflow-overview__col-count {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.sflow-overview__cols {
+  padding: 2px 0 4px 26px;
+}
+
+.sflow-overview__col {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px 2px 0;
+  font-size: 0.68rem;
+}
+
+.sflow-overview__badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  width: 14px;
+  min-width: 14px;
+  text-align: center;
+  border-radius: 3px;
+  padding: 1px 1px;
+  flex-shrink: 0;
+}
+
+.sflow-overview__badge--pk {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.sflow-overview__badge--fk {
+  background: rgba(91, 94, 244, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(91, 94, 244, 0.2);
+}
+
+.sflow-overview__badge:empty {
+  visibility: hidden;
+}
+
+.sflow-overview__col-name {
+  flex: 1;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sflow-overview__col-type {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.sflow-overview__col-ref {
+  font-size: 0.58rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}

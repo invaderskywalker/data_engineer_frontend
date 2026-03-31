@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8889/de'
+const BASE_URL = 'http://localhost:7001/de'
 
 export const IS_MOCK = false
 // console.log("import.meta.env.VITE_MOCK_API", import.meta.env.VITE_MOCK_API)

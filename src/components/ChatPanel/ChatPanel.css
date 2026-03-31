@@ -24,6 +24,23 @@
   gap: 0.625rem;
 }
 
+/* WS connection status dot */
+.chat-panel__ws-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: background 0.3s, opacity 0.3s;
+}
+
+.chat-panel__ws-dot--connected {
+  background: #22c55e;
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
+}
+
 .chat-panel__db-icon {
   width: 32px;
   height: 32px;

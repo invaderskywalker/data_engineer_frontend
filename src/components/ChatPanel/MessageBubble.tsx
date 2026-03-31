@@ -5,13 +5,15 @@ interface MessageBubbleProps {
   content: string
   timestamp?: string
   isLoading?: boolean
+  /** True while tokens are still streaming in — shows a blinking cursor */
+  isStreaming?: boolean
 }
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function MessageBubble({ role, content, timestamp, isLoading }: MessageBubbleProps) {
+export default function MessageBubble({ role, content, timestamp, isLoading, isStreaming }: MessageBubbleProps) {
   return (
     <div className={`message-bubble message-bubble--${role}`}>
       {role === 'assistant' && (
@@ -33,10 +35,13 @@ export default function MessageBubble({ role, content, timestamp, isLoading }: M
               <span />
             </div>
           ) : (
-            <p>{content}</p>
+            <p>
+              {content}
+              {isStreaming && <span className="message-bubble__cursor" />}
+            </p>
           )}
         </div>
-        {timestamp && !isLoading && (
+        {timestamp && !isLoading && !isStreaming && (
           <span className="message-bubble__time">{formatTime(timestamp)}</span>
         )}
       </div>

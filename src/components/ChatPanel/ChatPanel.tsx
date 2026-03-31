@@ -1,27 +1,36 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Run, Session, SchemaSnapshot } from '../../types'
-import { listSessions, getSession, askQuestion, completeRun } from '../../api/chat'
-import { useWebSocket } from '../../hooks/useWebSocket'
+import { listSessions, getSession } from '../../api/chat'
+import { useSuperAgent } from '../../hooks/useSuperAgent'
 import MessageBubble from './MessageBubble'
 import StepStream from './StepStream'
 import QuestionInput from './QuestionInput'
 import './ChatPanel.css'
+
+// ── Agent mode sent to super_agent WS event ──────────────────────────────────
+// Change this to match your backend CONFIG_MAP key for the data-engineer agent
+const AGENT_MODE = 'data_engineer'
 
 interface ChatPanelProps {
   connectionId: string
   connectionName: string
   schema: SchemaSnapshot | null
   sessionId?: string
-  onRunSelect: (run: Run) => void
-  onActiveRunChange: (run: Run | null) => void
+  onRunSelect?: (run: Run) => void
+  onActiveRunChange?: (run: Run | null) => void
   initialQuestion?: string
 }
 
 interface Turn {
+  /** Temporary client-side ID while the run is in-flight; replaced by runId on done */
   id: string
   question: string
+  /** Partial text accumulating during streaming */
+  streamingText: string
+  /** Final completed run (set when isDone) */
   run: Run | null
   isLoading: boolean
+  isStreaming: boolean
 }
 
 export default function ChatPanel({
@@ -37,98 +46,136 @@ export default function ChatPanel({
   const [sessions, setSessions] = useState<Session[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(initialSessionId)
   const [question, setQuestion] = useState(initialQuestion ?? '')
-  const [activeRunId, setActiveRunId] = useState<string | null>(null)
-  const [isRunning, setIsRunning] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { steps, isComplete } = useWebSocket(activeRunId)
+  // The active turn being streamed (temp id while in flight)
+  const activeTurnIdRef = useRef<string | null>(null)
 
-  // Load initial session
+  const { state: agent, sendMessage } = useSuperAgent()
+
+  // ── Load sessions & optional initial session ──────────────────────────────
+
   useEffect(() => {
     listSessions(connectionId).then(setSessions).catch(console.error)
 
     if (initialSessionId) {
       getSession(initialSessionId).then(session => {
         setCurrentSessionId(session.id)
-        const newTurns: Turn[] = session.runs.map(run => ({
+        const loaded: Turn[] = session.runs.map(run => ({
           id: run.id,
           question: run.question,
+          streamingText: '',
           run,
           isLoading: false,
+          isStreaming: false,
         }))
-        setTurns(newTurns)
+        setTurns(loaded)
         if (session.runs.length > 0) {
-          const lastRun = session.runs[session.runs.length - 1]
-          onRunSelect(lastRun)
+          onRunSelect?.(session.runs[session.runs.length - 1])
         }
       }).catch(console.error)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionId, initialSessionId])
 
-  // When run completes via websocket
-  useEffect(() => {
-    if (isComplete && activeRunId && currentSessionId) {
-      const sessionId = currentSessionId
-      const runId = activeRunId
-      completeRun(runId, sessionId).then(completedRun => {
-        setTurns(prev => prev.map(t =>
-          t.id === runId ? { ...t, run: completedRun, isLoading: false } : t
-        ))
-        setIsRunning(false)
-        setActiveRunId(null)
-        onRunSelect(completedRun)
-        onActiveRunChange(null)
-      }).catch(console.error)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComplete, activeRunId])
+  // ── Mirror streaming token text into the active turn ─────────────────────
 
-  // Auto-scroll
+  useEffect(() => {
+    const tid = activeTurnIdRef.current
+    if (!tid || !agent.isRunning) return
+    setTurns(prev => prev.map(t =>
+      t.id === tid ? { ...t, streamingText: agent.tokenText, isStreaming: true } : t
+    ))
+  }, [agent.tokenText, agent.isRunning])
+
+  // ── Handle run completion ─────────────────────────────────────────────────
+
+  useEffect(() => {
+    const tid = activeTurnIdRef.current
+    if (!agent.isDone || !tid) return
+
+    const finalRun: Run = {
+      id: agent.runId ?? tid,
+      session_id: currentSessionId ?? '',
+      question: turns.find(t => t.id === tid)?.question ?? '',
+      answer_text: agent.tokenText,
+      queries_executed: [],
+      status: agent.error ? 'error' : 'done',
+      error_message: agent.error ?? undefined,
+      created_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+    }
+
+    setTurns(prev => prev.map(t =>
+      t.id === tid
+        ? { ...t, id: finalRun.id, run: finalRun, isLoading: false, isStreaming: false }
+        : t
+    ))
+
+    activeTurnIdRef.current = null
+    onRunSelect?.(finalRun)
+    onActiveRunChange?.(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agent.isDone])
+
+  // ── Auto-scroll ───────────────────────────────────────────────────────────
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [turns, steps])
+  }, [turns, agent.tokenText])
 
-  async function handleSubmit() {
-    if (!question.trim() || isRunning) return
+  // ── Submit handler ────────────────────────────────────────────────────────
+
+  function handleSubmit() {
+    if (!question.trim() || agent.isRunning) return
     const q = question.trim()
     setQuestion('')
-    setIsRunning(true)
+
+    // Create/reuse a session id for this conversation
+    const sessionId = currentSessionId ?? crypto.randomUUID()
+    if (!currentSessionId) {
+      setCurrentSessionId(sessionId)
+    }
 
     const tempId = `temp-${Date.now()}`
+    activeTurnIdRef.current = tempId
+
     const newTurn: Turn = {
       id: tempId,
       question: q,
+      streamingText: '',
       run: null,
       isLoading: true,
+      isStreaming: false,
     }
     setTurns(prev => [...prev, newTurn])
 
-    try {
-      const run = await askQuestion(connectionId, q, currentSessionId)
-      if (!currentSessionId) {
-        setCurrentSessionId(run.session_id)
-        // Reload sessions
-        listSessions(connectionId).then(setSessions).catch(console.error)
-      }
-      setTurns(prev => prev.map(t =>
-        t.id === tempId ? { ...t, id: run.id, run, isLoading: true } : t
-      ))
-      setActiveRunId(run.id)
-      onActiveRunChange(run)
-    } catch (err) {
-      setTurns(prev => prev.map(t =>
-        t.id === tempId
-          ? { ...t, isLoading: false, run: { id: tempId, session_id: '', question: q, answer_text: 'Error: ' + String(err), queries_executed: [], status: 'error', created_at: new Date().toISOString() } }
-          : t
-      ))
-      setIsRunning(false)
-    }
+    // Notify parent that a run is starting
+    onActiveRunChange?.({
+      id: tempId,
+      session_id: sessionId,
+      question: q,
+      answer_text: '',
+      queries_executed: [],
+      status: 'running',
+      created_at: new Date().toISOString(),
+    })
+
+    // Emit via socket
+    sendMessage(AGENT_MODE, sessionId, q, { connection_id: connectionId })
   }
 
   function handleSuggestedQuestion(q: string) {
     setQuestion(q)
   }
+
+  // ── Convert timeline steps to the AgentStep format StepStream expects ─────
+
+  const agentSteps = agent.steps.map(s => ({
+    type: 'planning' as const,
+    message: s.text,
+    timestamp: '',
+  }))
 
   const tableCount = schema?.tables.length ?? 0
   const suggestedQuestions = schema?.suggested_questions ?? []
@@ -151,6 +198,13 @@ export default function ChatPanel({
             <span className="chat-panel__conn-meta">{tableCount} tables</span>
           </div>
         </div>
+
+        {/* Connection status dot */}
+        <div
+          className={`chat-panel__ws-dot ${agent.isConnected ? 'chat-panel__ws-dot--connected' : ''}`}
+          title={agent.isConnected ? 'Live connection' : 'Not connected'}
+        />
+
         {sessions.length > 0 && (
           <div className="chat-panel__session-count">
             <span>{sessions.length} sessions</span>
@@ -172,9 +226,7 @@ export default function ChatPanel({
               </svg>
             </div>
             <h3>Ask about your data</h3>
-            <p>
-              Ask any question in plain English and get back tables, charts, and insights.
-            </p>
+            <p>Ask any question in plain English and get back tables, charts, and insights.</p>
             {suggestedQuestions.length > 0 && (
               <div className="chat-panel__suggestions">
                 <p className="chat-panel__suggestions-label">Suggested questions:</p>
@@ -194,58 +246,62 @@ export default function ChatPanel({
           </div>
         ) : (
           <div className="chat-panel__turns">
-            {turns.map((turn, i) => (
-              <div key={turn.id} className="chat-panel__turn">
-                {/* User question */}
-                <MessageBubble
-                  role="user"
-                  content={turn.question}
-                  timestamp={turn.run?.created_at}
-                />
+            {turns.map((turn, i) => {
+              const isActiveTurn = i === turns.length - 1 && (turn.isLoading || turn.isStreaming)
+              return (
+                <div key={turn.id} className="chat-panel__turn">
+                  {/* User question */}
+                  <MessageBubble
+                    role="user"
+                    content={turn.question}
+                    timestamp={turn.run?.created_at}
+                  />
 
-                {/* Agent steps while loading */}
-                {turn.isLoading && i === turns.length - 1 && (
-                  <StepStream steps={steps} isActive={isRunning} />
-                )}
+                  {/* Timeline steps while the agent is working */}
+                  {isActiveTurn && agentSteps.length > 0 && !agent.tokenText && (
+                    <StepStream steps={agentSteps} isActive={agent.isRunning} />
+                  )}
 
-                {/* Assistant response */}
-                {turn.run?.status === 'done' && (
-                  <div>
+                  {/* Streaming text as it arrives */}
+                  {isActiveTurn && turn.streamingText && (
+                    <MessageBubble
+                      role="assistant"
+                      content={turn.streamingText}
+                      isStreaming
+                    />
+                  )}
+
+                  {/* Initial loading bubble (before first token) */}
+                  {isActiveTurn && !turn.streamingText && agentSteps.length === 0 && (
+                    <MessageBubble role="assistant" content="" isLoading />
+                  )}
+
+                  {/* Completed assistant response */}
+                  {!isActiveTurn && turn.run?.status === 'done' && (
                     <MessageBubble
                       role="assistant"
                       content={turn.run.answer_text}
                       timestamp={turn.run.completed_at}
                     />
-                    <button
-                      className="chat-panel__view-results"
-                      onClick={() => turn.run && onRunSelect(turn.run)}
-                    >
-                      View table & chart →
-                    </button>
-                  </div>
-                )}
+                  )}
 
-                {/* Error state */}
-                {turn.run?.status === 'error' && (
-                  <MessageBubble
-                    role="assistant"
-                    content={turn.run.error_message ?? turn.run.answer_text ?? 'An error occurred.'}
-                    timestamp={turn.run.created_at}
-                  />
-                )}
-
-                {/* Loading bubble */}
-                {turn.isLoading && steps.length === 0 && (
-                  <MessageBubble role="assistant" content="" isLoading />
-                )}
-              </div>
-            ))}
+                  {/* Error state */}
+                  {!isActiveTurn && turn.run?.status === 'error' && (
+                    <MessageBubble
+                      role="assistant"
+                      content={turn.run.error_message ?? turn.run.answer_text ?? 'An error occurred.'}
+                      timestamp={turn.run.created_at}
+                    />
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested questions if no turns */}
+      {/* Inline suggested questions after first turn */}
       {!isEmpty && suggestedQuestions.length > 0 && turns.length < 2 && (
         <div className="chat-panel__inline-suggestions">
           {suggestedQuestions.slice(0, 3).map(q => (
@@ -253,7 +309,7 @@ export default function ChatPanel({
               key={q}
               className="chat-panel__suggestion-chip"
               onClick={() => handleSuggestedQuestion(q)}
-              disabled={isRunning}
+              disabled={agent.isRunning}
             >
               {q}
             </button>
@@ -267,7 +323,7 @@ export default function ChatPanel({
           value={question}
           onChange={setQuestion}
           onSubmit={handleSubmit}
-          disabled={isRunning}
+          disabled={agent.isRunning}
         />
       </div>
     </div>

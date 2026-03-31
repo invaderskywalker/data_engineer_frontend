@@ -1,34 +1,160 @@
 .chat-page {
   flex: 1;
   display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
-/* Left panel */
-.chat-page__left {
-  width: 380px;
-  min-width: 380px;
+/* ── Top bar ─────────────────────────────────────── */
+.chat-page__topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.chat-page__view-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.chat-page__view-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.28rem 0.7rem;
+  border: none;
+  background: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.chat-page__view-btn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.chat-page__view-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.chat-page__view-btn--active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.chat-page__view-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.chat-page__needs-setup {
+  font-size: 0.9rem;
+  line-height: 1;
+  color: #f59e0b;
+  margin-left: -1px;
+}
+
+.chat-page__conn-label {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.chat-page__conn-label svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+/* ── Body ────────────────────────────────────────── */
+.chat-page__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Configure view: schema overview + chat ───────── */
+.chat-page__configure {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Schema overview panel — fixed width on the left */
+.chat-page__configure-schema {
+  width: 320px;
+  min-width: 260px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--border-subtle);
 }
 
-/* Right panel */
-.chat-page__right {
+/* Chat panel — fills remaining space in the middle */
+.chat-page__configure-chat {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-width: 0;
+  background: var(--bg-surface);
 }
 
-/* Loading state */
+/* ── Query view: chat + artifacts ─────────────────── */
+.chat-page__query-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Chat panel — fixed width on the left */
+.chat-page__chat {
+  width: 400px;
+  min-width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Artifacts panel — fills remaining space */
+.chat-page__artifacts {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Loading state ───────────────────────────────── */
 .chat-page__loading {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
   background: var(--bg-surface);
 }
 
@@ -51,13 +177,24 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .chat-page {
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 800px) {
+  .chat-page__configure {
     flex-direction: column;
   }
 
-  .chat-page__left {
+  .chat-page__configure-schema {
+    width: 100%;
+    height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .chat-page__query-layout {
+    flex-direction: column;
+  }
+
+  .chat-page__chat {
     width: 100%;
     min-width: 0;
     height: 50%;
@@ -65,7 +202,7 @@
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  .chat-page__right {
+  .chat-page__artifacts {
     height: 50%;
   }
 }
